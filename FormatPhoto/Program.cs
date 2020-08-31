@@ -12,7 +12,7 @@ namespace FormatPhoto
         {
             Console.WriteLine("Job format photo start...");
 
-            ProcessDirectory("C:\\Users\\zli\\source\\repos\\FormatPhoto\\FormatPhoto\\input", "C:\\Users\\zli\\source\\repos\\FormatPhoto\\FormatPhoto\\output");
+            ProcessDirectory("C:\\jls projet\\JLSFormatPhoto\\FormatPhoto\\input", "C:\\jls projet\\JLSFormatPhoto\\FormatPhoto\\output");
 
             Console.WriteLine("Copy finish");
         }
@@ -40,9 +40,13 @@ namespace FormatPhoto
                     var fileNameWithoutParentheses = fileNameWithoutExtension.Replace("（", "(").Replace("）", ")");
                     fileNameWithoutParentheses = Regex.Replace(fileNameWithoutParentheses.Replace("（", "(").Replace("）", ")"), @"\([^\(]*\)", "");
 
-                    /* Step3: Check the folder exists or not in the target filePath */
+                    /* Get productId by code(FileNameWithoutParentheses)*/
+                    var referenceId = db.ReferenceItem.Where(p => p.Code == fileNameWithoutParentheses).Select(p => p.Id).FirstOrDefault();
+                    var productId = db.Product.Where(p => p.ReferenceItemId == referenceId).Select(p => p.Id).FirstOrDefault();
 
-                    var outputFilePath = outputDirectory + "\\" + fileNameWithoutParentheses;
+
+                    /* Step3: Check the folder exists or not in the target filePath */
+                    var outputFilePath = outputDirectory + "\\" + productId.ToString();
                     if (!Directory.Exists(outputFilePath))
                     {
                         DirectoryInfo di = Directory.CreateDirectory(outputFilePath);
@@ -52,18 +56,14 @@ namespace FormatPhoto
                     File.Copy(fileNameWithPath, Path.Combine(outputFilePath, Path.GetFileName(fileName)) , true);// true present overwrite if exists
 
                     /* Step5: insert data into sql server */
-                    var referenceId = db.ReferenceItem.Where(p => p.Code == fileNameWithoutParentheses).Select(p => p.Id).FirstOrDefault();
-                    var productId = db.Product.Where(p => p.ReferenceItemId == referenceId).Select(p => p.Id).FirstOrDefault();
-
-
-                  
-                    if (productId!=0)
+                    var productPathId = db.ProductPhotoPath.Where(p => p.ProductId == productId && p.Path == Path.Combine("Images\\" + productId.ToString(), Path.GetFileName(fileName))).Select(p => p.Id).FirstOrDefault();
+                    if (productId!=0 && productPathId==0)
                     {
                         var productPhotoPath = new ProductPhotoPath();
                         productPhotoPath.CreatedBy = -1;
                         productPhotoPath.CreatedOn = DateTime.Now;
                         productPhotoPath.ProductId = productId;
-                        productPhotoPath.Path = Path.Combine("images", Path.GetFileName(fileName));
+                        productPhotoPath.Path = Path.Combine("Images\\" + productId.ToString(), Path.GetFileName(fileName));
 
                         db.ProductPhotoPath.Add(productPhotoPath);
                     }

@@ -16,7 +16,7 @@ namespace FormatPhoto
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer("Data Source=blog.db"); //todo place correcte connection string 
+            optionsBuilder.UseSqlServer("Server=localhost;Database=JlsDATA;User Id=dev-sql;Password=abcd+1234"); //todo place correcte connection string 
         }
 
         public DbSet<Product> Product { get; set; }
